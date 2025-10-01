@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>llm.c Chatbot</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: monospace; margin: 20px; background: #111; color: #0f0; }
+        #chat { border: 1px solid #0f0; height: 400px; overflow-y: scroll; padding: 10px; margin: 10px 0; }
+        #input { width: 80%; padding: 5px; background: #222; color: #0f0; border: 1px solid #0f0; }
+        #send { padding: 5px 15px; background: #0f0; color: #000; border: none; cursor: pointer; }
+        .msg { margin: 5px 0; }
+        .user { color: #ff0; }
+        .bot { color: #0ff; }
+    </style>
+</head>
+<body>
+    <h1>llm.c Chatbot</h1>
+    <div id="chat"></div>
+    <input id="input" placeholder="Type your message..." />
+    <button id="send">Send</button>
+    
+    <script>
+        // Register service worker for llm.c processing
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log('llm.c Service Worker registered');
+            });
+        }
+        
+        const chat = document.getElementById('chat');
+        const input = document.getElementById('input');
+        const send = document.getElementById('send');
+        
+        function addMessage(msg, type) {
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.textContent = `${type === 'user' ? 'You' : 'Bot'}: ${msg}`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const msg = input.value.trim();
+            if (!msg) return;
+            
+            addMessage(msg, 'user');
+            input.value = '';
+            
+            try {
+                // Use both service worker and fallback
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                const data = await response.json();
+                addMessage(data.response, 'bot');
+            } catch (e) {
+                addMessage('Error: ' + e.message, 'bot');
+            }
+        }
+        
+        send.onclick = sendMessage;
+        input.onkeypress = e => e.key === 'Enter' && sendMessage();
+        
+        addMessage('llm.c chatbot ready! Service worker enabled.', 'bot');
+    </script>
+</body>
+</html>
