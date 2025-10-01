@@ -21,10 +21,13 @@
     <button id="send">Send</button>
     
     <script>
-        // Register service worker for llm.c processing
+        // Register llm.c service worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(() => {
+            navigator.serviceWorker.register('sw.js').then(reg => {
                 console.log('llm.c Service Worker registered');
+                return navigator.serviceWorker.ready;
+            }).then(() => {
+                console.log('llm.c Service Worker ready');
             });
         }
         
@@ -64,7 +67,7 @@
         send.onclick = sendMessage;
         input.onkeypress = e => e.key === 'Enter' && sendMessage();
         
-        addMessage('llm.c chatbot ready! Service worker enabled.', 'bot');
+        addMessage('llm.c chatbot ready! SW: ' + ('serviceWorker' in navigator ? 'enabled' : 'disabled'), 'bot');
     </script>
 </body>
 </html>
